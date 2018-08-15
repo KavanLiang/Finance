@@ -1,10 +1,12 @@
+"""
+A tool for formatting stock data.
+"""
 import pandas as pd
 import os
 from time import sleep
 
 TICKER_URL = "https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NASDAQ&render=download"
-ALPHA_VANTAGE_KEY_1 = ''#AVKEYHERE
-ALPHA_VANTAGE_KEY_2 = ''#AND HERE
+ALPHA_VANTAGE_KEY_1 = ''  # AVKEYHERE
 TEMP_BATCH_PATH = 'batch_stock_data'
 NASDAQ_TICKERS = 'nasdaq_tickers.csv'
 
@@ -47,18 +49,32 @@ def get_alpha_vantage_data(reload_tickers: bool = False) -> None:
             sleep(18)  # avoid throttling without premium key
             try:
                 print(f'Processing {ticker}.csv. Currently at file {index} of {tickers.shape[0]}.')
-                print(f'Querying: {alpha_vantage_query_daily(ticker, ALPHA_VANTAGE_KEY_2)}')
-                df = pd.read_csv(alpha_vantage_query_daily(ticker, ALPHA_VANTAGE_KEY_1))
-                df.set_index('timestamp', inplace=True)
-                df.to_csv(f'stock_data/daily_adjusted_{ticker}.csv')
-                print(f'Saved daily_adjusted_{ticker}.csv.')
+                get_alpha_vantage_data(ticker, ALPHA_VANTAGE_KEY_1)
             except KeyError:
                 print(f'AlphaVantage does not have data for {ticker}.')
 
 
+def set_av_key(key: str):
+    ALPHA_VANTAGE_KEY_1 = key
+
+
+def get_alpha_vantage_data(ticker: str, key: str) -> pd.DataFrame:
+    """
+    Save a csv file containing data from the passed ticker.
+    Ticker will be of format daily_adjusted_{ticker}.csv
+    :param ticker: the ticker being saved.
+    """
+    print(f'Querying: {alpha_vantage_query_daily(ticker, key)}')
+    df = pd.read_csv(alpha_vantage_query_daily(ticker, key))
+    df.set_index('timestamp', inplace=True)
+    df.to_csv(f'stock_data/daily_adjusted_{ticker}.csv')
+    print(f'Saved daily_adjusted_{ticker}')
+    return df
+
+
 def compile_data() -> pd.DataFrame:
     """
-    :return:  a Dataframe with all the stock data written into it
+    :return:  a DataFrame with all the stock data written into it
     """
     joined_data = pd.DataFrame
     files = os.listdir(TEMP_BATCH_PATH)
@@ -79,6 +95,7 @@ def compile_data() -> pd.DataFrame:
             break
     joined_data.to_csv("joined_data.csv")
     return joined_data
+
 
 if __name__ == '__main__':
     pass
